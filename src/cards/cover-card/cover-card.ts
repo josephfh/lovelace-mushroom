@@ -24,6 +24,7 @@ import "../../shared/shape-avatar";
 import "../../shared/shape-icon";
 import "../../shared/state-info";
 import "../../shared/state-item";
+import "../../shared/click-hijacker";
 import { computeAppearance } from "../../utils/appearance";
 import { MushroomBaseCard } from "../../utils/base-card";
 import { cardStyle } from "../../utils/card-styles";
@@ -143,6 +144,14 @@ export class CoverCard extends MushroomBaseCard implements LovelaceCard {
         }
     }
 
+    private onPress(): void {
+        handleAction(this, this.hass!, this._config!, 'hold');
+    }
+
+    private onTap(): void {
+        handleAction(this, this.hass!, this._config!, 'tap');
+    }
+
     private _handleAction(ev: ActionHandlerEvent) {
         handleAction(this, this.hass!, this._config!, ev.detail.action!);
     }
@@ -177,6 +186,8 @@ export class CoverCard extends MushroomBaseCard implements LovelaceCard {
             stateDisplay += ` - ${this.position}${blankBeforePercent(this.hass.locale)}%`;
         }
 
+        const useClickHijacker = this._controls.length == 0
+
         const rtl = computeRTL(this.hass);
 
         return html`
@@ -195,15 +206,26 @@ export class CoverCard extends MushroomBaseCard implements LovelaceCard {
                         ${this.renderBadge(stateObj)}
                         ${this.renderStateInfo(stateObj, appearance, name, stateDisplay)};
                     </mushroom-state-item>
-                    ${this._controls.length > 0
+                    ${this._controls.filter(c => c !== 'position_control').length > 0
                         ? html`
                               <div class="actions" ?rtl=${rtl}>
-                                  ${this.renderActiveControl(stateObj, appearance.layout)}
+                                  ${this.renderActiveControl(stateObj)}
                                   ${this.renderNextControlButton()}
                               </div>
                           `
                         : nothing}
+            
                 </mushroom-card>
+                ${this.renderSlider(stateObj)}
+                ${useClickHijacker
+                    ? html`
+                    <mushroom-click-hijacker
+                        .hass=${this.hass}
+                        .entity=${stateObj}
+                        @hijack-press=${this.onPress}
+                        @hijack-tap=${this.onTap}
+                    ></mushroom-click-hijacker>
+                ` : nothing}
             </ha-card>
         `;
     }
@@ -233,16 +255,8 @@ export class CoverCard extends MushroomBaseCard implements LovelaceCard {
         `;
     }
 
-    private renderActiveControl(stateObj: HassEntity, layout?: Layout) {
+    private renderActiveControl(stateObj: HassEntity) {
         switch (this._activeControl) {
-            case "buttons_control":
-                return html`
-                    <mushroom-cover-buttons-control
-                        .hass=${this.hass}
-                        .entity=${stateObj}
-                        .fill=${layout !== "horizontal"}
-                    />
-                `;
             case "position_control": {
                 const color = getStateColor(stateObj as CoverEntity);
                 const sliderStyle = {};
@@ -254,20 +268,32 @@ export class CoverCard extends MushroomBaseCard implements LovelaceCard {
                         .hass=${this.hass}
                         .entity=${stateObj}
                         @current-change=${this.onCurrentPositionChange}
+                        @hijack-press=${this.onPress}
+                        @hijack-tap=${this.onTap}
                         style=${styleMap(sliderStyle)}
                     />
                 `;
             }
-            case "tilt_position_control": {
+            default:
+                return nothing;
+        }
+    }
+
+    private renderSlider(stateObj: HassEntity) {
+        switch (this._activeControl) {
+            case "position_control": {
                 const color = getStateColor(stateObj as CoverEntity);
                 const sliderStyle = {};
                 sliderStyle["--slider-color"] = `rgb(${color})`;
                 sliderStyle["--slider-bg-color"] = `rgba(${color}, 0.2)`;
 
                 return html`
-                    <mushroom-cover-tilt-position-control
+                    <mushroom-cover-position-control
                         .hass=${this.hass}
                         .entity=${stateObj}
+                        @current-change=${this.onCurrentPositionChange}
+                        @hijack-press=${this.onPress}
+                        @hijack-tap=${this.onTap}
                         style=${styleMap(sliderStyle)}
                     />
                 `;
@@ -284,6 +310,9 @@ export class CoverCard extends MushroomBaseCard implements LovelaceCard {
             css`
                 mushroom-state-item {
                     cursor: pointer;
+                    position: relative;
+                    z-index: 1;
+                    pointer-events: none;
                 }
                 mushroom-shape-icon {
                     --icon-color: rgb(var(--rgb-state-cover));

@@ -31,6 +31,7 @@ import { computeEntityPicture } from "../../utils/info";
 import { FAN_CARD_EDITOR_NAME, FAN_CARD_NAME, FAN_ENTITY_DOMAINS } from "./const";
 import "./controls/fan-oscillate-control";
 import "./controls/fan-percentage-control";
+import "../../shared/click-hijacker";
 import { FanCardConfig } from "./fan-card-config";
 import { getPercentage } from "./utils";
 
@@ -102,6 +103,14 @@ export class FanCard extends MushroomBaseCard implements LovelaceCard {
         }
     }
 
+    private onPress(): void {
+        handleAction(this, this.hass!, this._config!, 'hold');
+    }
+
+    private onTap(): void {
+        handleAction(this, this.hass!, this._config!, 'tap');
+    }
+
     private _handleAction(ev: ActionHandlerEvent) {
         handleAction(this, this.hass!, this._config!, ev.detail.action!);
     }
@@ -140,7 +149,9 @@ export class FanCard extends MushroomBaseCard implements LovelaceCard {
 
         const displayControls =
             (!this._config.collapsible_controls || isActive(stateObj)) &&
-            (this._config.show_percentage_control || this._config.show_oscillate_control);
+            this._config.show_oscillate_control;
+
+        const useClickHijacker = !displayControls
 
         return html`
             <ha-card class=${classMap({ "fill-container": appearance.fill_container })}>
@@ -161,15 +172,6 @@ export class FanCard extends MushroomBaseCard implements LovelaceCard {
                     ${displayControls
                         ? html`
                               <div class="actions" ?rtl=${rtl}>
-                                  ${this._config.show_percentage_control
-                                      ? html`
-                                            <mushroom-fan-percentage-control
-                                                .hass=${this.hass}
-                                                .entity=${stateObj}
-                                                @current-change=${this.onCurrentPercentageChange}
-                                            ></mushroom-fan-percentage-control>
-                                        `
-                                      : nothing}
                                   ${this._config.show_oscillate_control
                                       ? html`
                                             <mushroom-fan-oscillate-control
@@ -181,7 +183,28 @@ export class FanCard extends MushroomBaseCard implements LovelaceCard {
                               </div>
                           `
                         : nothing}
+                 
                 </mushroom-card>
+                ${this._config.show_percentage_control
+                    ? html`
+                          <mushroom-fan-percentage-control
+                              .hass=${this.hass}
+                              .entity=${stateObj}
+                              @hijack-press=${this.onPress}
+                              @hijack-tap=${this.onTap}
+                              @current-change=${this.onCurrentPercentageChange}
+                          ></mushroom-fan-percentage-control>
+                      `
+                    : nothing}
+                ${useClickHijacker
+                    ? html`
+                    <mushroom-click-hijacker
+                        .hass=${this.hass}
+                        .entity=${stateObj}
+                        @hijack-press=${this.onPress}
+                        @hijack-tap=${this.onTap}
+                    ></mushroom-click-hijacker>
+                ` : nothing}
             </ha-card>
         `;
     }
@@ -220,6 +243,9 @@ export class FanCard extends MushroomBaseCard implements LovelaceCard {
             css`
                 mushroom-state-item {
                     cursor: pointer;
+                    position: relative;
+                    z-index: 1;
+                    pointer-events: none;
                 }
                 mushroom-shape-icon {
                     --icon-color: rgb(var(--rgb-state-fan));

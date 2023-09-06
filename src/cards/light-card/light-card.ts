@@ -23,6 +23,7 @@ import "../../shared/shape-avatar";
 import "../../shared/shape-icon";
 import "../../shared/state-info";
 import "../../shared/state-item";
+import "../../shared/click-hijacker";
 import { computeAppearance } from "../../utils/appearance";
 import { MushroomBaseCard } from "../../utils/base-card";
 import { cardStyle } from "../../utils/card-styles";
@@ -131,6 +132,14 @@ export class LightCard extends MushroomBaseCard implements LovelaceCard {
         }
     }
 
+    private onPress(): void {
+        handleAction(this, this.hass!, this._config!, 'hold');
+    }
+
+    private onTap(): void {
+        handleAction(this, this.hass!, this._config!, 'tap');
+    }
+
     updateControls() {
         if (!this._config || !this.hass || !this._config.entity) return;
 
@@ -192,11 +201,15 @@ export class LightCard extends MushroomBaseCard implements LovelaceCard {
             stateDisplay = `${this.brightness}${blankBeforePercent(this.hass.locale)}%`;
         }
 
+        const useClickHijacker = this._controls.length == 0
+
         const rtl = computeRTL(this.hass);
 
         return html`
             <ha-card class=${classMap({ "fill-container": appearance.fill_container })}>
                 <mushroom-card .appearance=${appearance} ?rtl=${rtl}>
+
+       
                     <mushroom-state-item
                         ?rtl=${rtl}
                         .appearance=${appearance}
@@ -210,7 +223,7 @@ export class LightCard extends MushroomBaseCard implements LovelaceCard {
                         ${this.renderBadge(stateObj)}
                         ${this.renderStateInfo(stateObj, appearance, name, stateDisplay)};
                     </mushroom-state-item>
-                    ${this._controls.length > 0
+                    ${this._controls.filter(c => c !== 'brightness_control').length > 0
                         ? html`
                               <div class="actions" ?rtl=${rtl}>
                                   ${this.renderActiveControl(stateObj)}
@@ -218,7 +231,19 @@ export class LightCard extends MushroomBaseCard implements LovelaceCard {
                               </div>
                           `
                         : nothing}
+
                 </mushroom-card>
+
+                ${this.renderSlider(stateObj)}
+                ${useClickHijacker
+                    ? html`
+                    <mushroom-click-hijacker
+                        .hass=${this.hass}
+                        .entity=${stateObj}
+                        @hijack-press=${this.onPress}
+                        @hijack-tap=${this.onTap}
+                    ></mushroom-click-hijacker>
+                ` : nothing}
             </ha-card>
         `;
     }
@@ -265,7 +290,7 @@ export class LightCard extends MushroomBaseCard implements LovelaceCard {
         `;
     }
 
-    private renderActiveControl(entity: LightEntity) {
+    private renderSlider(entity: LightEntity) {
         switch (this._activeControl) {
             case "brightness_control":
                 const lightRgbColor = getRGBColor(entity);
@@ -292,8 +317,17 @@ export class LightCard extends MushroomBaseCard implements LovelaceCard {
                         .entity=${entity}
                         style=${styleMap(sliderStyle)}
                         @current-change=${this.onCurrentBrightnessChange}
+                        @hijack-press=${this.onPress}
+                        @hijack-tap=${this.onTap}
                     />
                 `;
+            default:
+                return nothing;
+            }
+        }
+
+    private renderActiveControl(entity: LightEntity) {
+        switch (this._activeControl) {
             case "color_temp_control":
                 return html`
                     <mushroom-light-color-temp-control .hass=${this.hass} .entity=${entity} />
@@ -314,6 +348,9 @@ export class LightCard extends MushroomBaseCard implements LovelaceCard {
             css`
                 mushroom-state-item {
                     cursor: pointer;
+                    position: relative;
+                    z-index: 1;
+                    pointer-events: none;
                 }
                 mushroom-shape-icon {
                     --icon-color: rgb(var(--rgb-state-light));

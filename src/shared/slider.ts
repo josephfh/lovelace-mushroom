@@ -83,16 +83,25 @@ export class SliderItem extends LitElement {
     setupListeners() {
         if (this.slider && !this._mc) {
             const threshold = getSliderThreshold(this.slider);
-            this._mc = new Hammer.Manager(this.slider, { touchAction: "pan-y" });
-            this._mc.add(
-                new Hammer.Pan({
-                    threshold,
-                    direction: Hammer.DIRECTION_ALL,
-                    enable: true,
-                })
-            );
+            const pan = new Hammer.Pan({
+                event: 'pan',
+                enable: true,
+                threshold,
+                direction: Hammer.DIRECTION_ALL
+            })
+            const press = new Hammer.Press({
+                event: "press",
+                time: 400
+            })
+            const tap = new Hammer.Tap({
+                event: "tap"
+            })
 
-            this._mc.add(new Hammer.Tap({ event: "singletap" }));
+            this._mc = new Hammer.Manager(this.slider, { touchAction: "pan-y", recognizers: [] });
+
+            this._mc.add([pan, tap, press])
+
+            pan.recognizeWith([tap]);
 
             let savedValue;
             this._mc.on("panstart", () => {
@@ -139,19 +148,20 @@ export class SliderItem extends LitElement {
                 );
             });
 
-            this._mc.on("singletap", (e) => {
+            this._mc.on("tap", () => {
                 if (this.disabled) return;
-                const percentage = getPercentageFromEvent(e);
-                // Prevent from input selecting a value that doesn't lie on a step
-                this.value = Math.round(this.percentageToValue(percentage) / this.step) * this.step;
                 this.dispatchEvent(
-                    new CustomEvent("change", {
-                        detail: {
-                            value: this.value,
-                        },
-                    })
+                    new CustomEvent("hijack-tap")
                 );
             });
+
+            this._mc.on("press", () => {
+                if (this.disabled) return;
+                this.dispatchEvent(
+                    new CustomEvent("hijack-press")
+                );
+            });
+
         }
     }
 
@@ -166,7 +176,7 @@ export class SliderItem extends LitElement {
         return html`
             <div
                 class=${classMap({
-                    container: true,
+                    container: false,
                     inactive: this.inactive || this.disabled,
                     controlled: this.controlled,
                 })}
@@ -200,10 +210,11 @@ export class SliderItem extends LitElement {
             .container {
                 display: flex;
                 flex-direction: row;
-                height: var(--control-height);
             }
             .slider {
-                position: relative;
+                position: absolute;
+                top: 0;
+                left: 0;
                 height: 100%;
                 width: 100%;
                 border-radius: var(--control-border-radius);
@@ -233,6 +244,7 @@ export class SliderItem extends LitElement {
                 transform-origin: left;
                 background-color: var(--main-color);
                 transition: transform 180ms ease-in-out;
+                opacity: 25%;
             }
             .slider .slider-track-indicator {
                 position: absolute;

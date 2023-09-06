@@ -29,6 +29,18 @@ export class LightBrighnessControl extends LitElement {
         );
     }
 
+    onPress(): void {
+        this.dispatchEvent(
+            new CustomEvent("hijack-press")
+        );
+    }
+
+    onTap(): void {
+        this.dispatchEvent(
+            new CustomEvent("hijack-tap")
+        );
+    }
+
     protected render(): TemplateResult {
         const brightness = getBrightness(this.entity);
 
@@ -40,6 +52,8 @@ export class LightBrighnessControl extends LitElement {
                 .showActive=${true}
                 @change=${this.onChange}
                 @current-change=${this.onCurrentChange}
+                @hijack-press=${this.onPress}
+                @hijack-tap=${this.onTap}
             />
         `;
     }

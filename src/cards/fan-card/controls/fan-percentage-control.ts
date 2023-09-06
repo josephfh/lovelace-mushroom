@@ -29,6 +29,18 @@ export class FanPercentageControl extends LitElement {
             })
         );
     }
+    
+    onPress(): void {
+        this.dispatchEvent(
+            new CustomEvent("hijack-press")
+        );
+    }
+
+    onTap(): void {
+        this.dispatchEvent(
+            new CustomEvent("hijack-tap")
+        );
+    }
 
     protected render(): TemplateResult {
         const percentage = getPercentage(this.entity);
@@ -41,6 +53,8 @@ export class FanPercentageControl extends LitElement {
                 .showActive=${true}
                 @change=${this.onChange}
                 @current-change=${this.onCurrentChange}
+                @hijack-press=${this.onPress}
+                @hijack-tap=${this.onTap}
                 step=${computePercentageStep(this.entity)}
             />
         `;
