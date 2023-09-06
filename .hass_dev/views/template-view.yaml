@@ -44,6 +44,7 @@ cards:
         primary: Hello, {{user}}
         secondary: How are you?
         icon: mdi:home
+        icon_text: 12
         badge_icon: mdi:fire
         badge_color: red
     columns: 2

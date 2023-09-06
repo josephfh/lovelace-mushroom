@@ -18,6 +18,7 @@ import {
 import "../../shared/shape-icon";
 import "../../shared/state-info";
 import "../../shared/state-item";
+import "../../shared/icon-text";
 import { computeAppearance } from "../../utils/appearance";
 import { MushroomBaseElement } from "../../utils/base-element";
 import { cardStyle } from "../../utils/card-styles";
@@ -37,6 +38,7 @@ registerCustomCard({
 const TEMPLATE_KEYS = [
     "icon",
     "icon_color",
+    "icon_text",
     "badge_color",
     "badge_icon",
     "primary",
@@ -121,6 +123,7 @@ export class TemplateCard extends MushroomBaseElement implements LovelaceCard {
 
         const icon = this.getValue("icon");
         const iconColor = this.getValue("icon_color");
+        const iconText = this.getValue("icon_text");
         const badgeIcon = this.getValue("badge_icon");
         const badgeColor = this.getValue("badge_color");
         const primary = this.getValue("primary");
@@ -134,7 +137,7 @@ export class TemplateCard extends MushroomBaseElement implements LovelaceCard {
         const appearance = computeAppearance({
             fill_container: this._config.fill_container,
             layout: this._config.layout,
-            icon_type: Boolean(picture) ? "entity-picture" : Boolean(icon) ? "icon" : "none",
+            icon_type: Boolean(iconText) ? 'icon-text' : Boolean(picture) ? "entity-picture" : Boolean(icon) ? "icon" : "none",
             primary_info: Boolean(primary) ? "name" : "none",
             secondary_info: Boolean(secondary) ? "state" : "none",
         });
@@ -153,7 +156,9 @@ export class TemplateCard extends MushroomBaseElement implements LovelaceCard {
                             hasDoubleClick: hasAction(this._config.double_tap_action),
                         })}
                     >
-                        ${picture
+                        ${iconText
+                            ? this.renderIconText(iconText, iconColor)
+                            : picture
                             ? this.renderPicture(picture)
                             : weatherSvg
                             ? html`<div slot="icon">${weatherSvg}</div>`
@@ -195,6 +200,22 @@ export class TemplateCard extends MushroomBaseElement implements LovelaceCard {
             <mushroom-shape-icon style=${styleMap(iconStyle)} slot="icon">
                 <ha-state-icon .icon=${icon}></ha-state-icon>
             </mushroom-shape-icon>
+        `;
+    }
+
+    renderIconText(text: string, iconColor?: string): TemplateResult {
+        const iconStyle = {};
+        if (iconColor) {
+            const iconRgbColor = computeRgbColor(iconColor);
+            iconStyle["--icon-color"] = `rgb(${iconRgbColor})`;
+            iconStyle["--shape-color"] = `rgba(${iconRgbColor}, 0.2)`;
+        }
+        return html`
+            <mushroom-icon-text
+                style=${styleMap(iconStyle)} 
+                slot="icon"
+                .text=${text}
+            ></mushroom-icon-text>
         `;
     }
 

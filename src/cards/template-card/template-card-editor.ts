@@ -19,6 +19,7 @@ export const TEMPLATE_LABELS = [
     "secondary",
     "multiline_secondary",
     "picture",
+    "icon_text",
 ];
 
 const SCHEMA: HaFormSchema[] = [
@@ -29,6 +30,10 @@ const SCHEMA: HaFormSchema[] = [
     },
     {
         name: "icon_color",
+        selector: { template: {} },
+    },
+    {
+        name: "icon_text",
         selector: { template: {} },
     },
     {
