@@ -20,6 +20,7 @@ export const TEMPLATE_LABELS = [
     "multiline_secondary",
     "picture",
     "icon_text",
+    "external_url",
 ];
 
 const SCHEMA: HaFormSchema[] = [
@@ -54,6 +55,10 @@ const SCHEMA: HaFormSchema[] = [
     },
     {
         name: "picture",
+        selector: { template: {} },
+    },
+    {
+        name: "external_url",
         selector: { template: {} },
     },
     {

@@ -19,6 +19,7 @@ import "../../shared/shape-icon";
 import "../../shared/state-info";
 import "../../shared/state-item";
 import "../../shared/icon-text";
+import "../../shared/click-hijacker";
 import { computeAppearance } from "../../utils/appearance";
 import { MushroomBaseElement } from "../../utils/base-element";
 import { cardStyle } from "../../utils/card-styles";
@@ -44,6 +45,7 @@ const TEMPLATE_KEYS = [
     "primary",
     "secondary",
     "picture",
+    "external_url",
 ] as const;
 type TemplateKey = (typeof TEMPLATE_KEYS)[number];
 
@@ -129,6 +131,7 @@ export class TemplateCard extends MushroomBaseElement implements LovelaceCard {
         const primary = this.getValue("primary");
         const secondary = this.getValue("secondary");
         const picture = this.getValue("picture");
+        const externalUrl = this.getValue("external_url");
 
         const multiline_secondary = this._config.multiline_secondary;
 
@@ -176,6 +179,14 @@ export class TemplateCard extends MushroomBaseElement implements LovelaceCard {
                         ></mushroom-state-info>
                     </mushroom-state-item>
                 </mushroom-card>
+                ${externalUrl
+                    ? html`
+                <mushroom-click-hijacker
+                    .hass=${this.hass}
+                    @hijack-press=${() => window.open(externalUrl, "_blank")}
+                    @hijack-tap=${() => window.open(externalUrl, "_blank")}
+                ></mushroom-click-hijacker>
+            ` : nothing}
             </ha-card>
         `;
     }

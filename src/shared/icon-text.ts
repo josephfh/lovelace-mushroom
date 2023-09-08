@@ -8,6 +8,7 @@ export class IconText extends LitElement {
     protected render(): TemplateResult {
         return html`
             <div class="icon-text-container">
+                <span class="icon-text-shape"></span>
                 <span class="icon-text">
                     ${this.text}
                 </span>
@@ -17,31 +18,33 @@ export class IconText extends LitElement {
 
     static get styles(): CSSResultGroup {
         return css`
-            :host {
-                --icon-color: var(--primary-text-color);
-                --icon-color-disabled: rgb(var(--rgb-disabled));
-                --shape-color: rgba(var(--rgb-primary-text-color), 0.05);
-                --shape-color-disabled: rgba(var(--rgb-disabled), 0.2);
-            }
             .icon-text-container {
-                position: relative;
-                width: var(--icon-size);
-                height: var(--icon-size);
+                align-items: center;
                 border-radius: var(--icon-border-radius);
                 display: flex;
-                align-items: center;
+                height: var(--icon-text-shape-size);
                 justify-content: center;
-                background-color: var(--shape-color);
-                transition-property: background-color, box-shadow;
-                transition-duration: 280ms;
-                transition-timing-function: ease-out;
-                animation: var(--shape-animation);
-                box-shadow: 0 0 0 1px var(--shape-outline-color);
                 overflow: hidden;
+                position: relative;
+                width: var(--icon-text-shape-size);
+            }
+            .icon-text-shape {
+                animation: var(--shape-animation);
+                background-color: var(--icon-color);
+                box-shadow: 0 0 0 1px var(--shape-outline-color);
+                display: flex;
+                filter: brightness(75%);
+                height: var(--icon-text-shape-size);
+                position: absolute;
+                transition-duration: 280ms;
+                transition-property: background-color, box-shadow;
+                transition-timing-function: ease-out;
+                width: var(--icon-text-shape-size);
             }
             .icon-text {
-                color: var(--icon-color);
+                color: rgb(var(--rgb-white));
                 font-weight: bold;
+                position: relative;
             }
         `;
     }

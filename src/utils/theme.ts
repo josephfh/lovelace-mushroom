@@ -65,6 +65,9 @@ export const themeVariables = css`
     --icon-border-radius: var(--mush-icon-border-radius, 50%);
     --icon-size: var(--mush-icon-size, 42px);
     --icon-symbol-size: var(--mush-icon-symbol-size, 0.5em);
+
+    /* Icon text */
+    --icon-text-shape-size: var(--mush-icon-size, 36px);
 `;
 
 export const themeColorCss = css`

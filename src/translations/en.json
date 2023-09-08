@@ -82,7 +82,8 @@
                 "badge_icon": "Badge icon",
                 "badge_color": "Badge color",
                 "picture": "Picture (will replace the icon)",
-                "icon_text": "Icon text (will replace the icon)"
+                "icon_text": "Icon text (will replace the icon)",
+                "external_url": "External URL (will replace all touch actions)"
             },
             "title": {
                 "title": "Title",
